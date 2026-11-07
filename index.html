@@ -57,7 +57,7 @@ main{padding:16px}
 .tabs .badge{position:absolute;top:5px;left:calc(50% + 8px);min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;display:grid;place-items:center;padding:0 5px}
 
 /* records */
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;position:relative;overflow:hidden}
 .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--k)}
 .kpi b{display:block;font-size:22px;font-weight:900;line-height:1.1}
@@ -93,7 +93,7 @@ main{padding:16px}
   <header class="bar">
     <span class="logo">ICF-SL</span>
     <div class="t"><b>ITN Distribution</b><small>SMS Field App · 2027 Mass ITN Campaign</small></div>
-    <span class="net" id="net"><i></i><span>Offline</span></span>
+    <span class="net on" id="net"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>SMS mode</span></span>
   </header>
 
   <main>
@@ -126,13 +126,11 @@ main{padding:16px}
     <!-- RECORDS -->
     <section id="vRec" class="hidden">
       <div class="kpis">
-        <div class="kpi" style="--k:var(--ok)"><b id="kDone">0</b><span>On server</span></div>
         <div class="kpi" style="--k:var(--sms)"><b id="kSms">0</b><span>Sent by SMS</span></div>
         <div class="kpi" style="--k:var(--wait)"><b id="kWait">0</b><span>Not sent</span></div>
       </div>
       <div class="card">
-        <div class="row" style="margin-bottom:6px"><p class="h" style="flex:1;margin:0">Records on this phone</p>
-          <button class="btn sec sm" id="syncBtn" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4"/></svg>Sync now</button></div>
+        <div class="row" style="margin-bottom:6px"><p class="h" style="flex:1;margin:0">Records on this phone</p></div>
         <div id="list"></div>
       </div>
     </section>
@@ -142,11 +140,9 @@ main{padding:16px}
       <div class="card">
         <p class="h">Settings</p>
         <div class="fld"><label for="sDist">Distributor ID <span class="r">*</span></label><input id="sDist" maxlength="12" placeholder="e.g. DIST014"></div>
-        <div class="fld"><label for="sGw">Gateway phone number <span class="r">*</span></label><input id="sGw" type="tel" inputmode="tel"><div class="hint">The phone running the ITN SMS Gateway app.</div></div>
-        <div class="fld"><label for="sUrl">Server address (Apps Script web app)</label><input id="sUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec"></div>
+        <div class="fld"><label for="sGw">Gateway phone number <span class="r">*</span></label><input id="sGw" type="tel" inputmode="tel"><div class="hint">The phone running the ITN SMS Gateway app. Every record is sent to this number by SMS.</div></div>
         <div class="stack">
           <button class="btn" id="saveSet" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Save settings</button>
-          <button class="btn sec" id="testSet" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M2 12h4l3-8 6 16 3-8h4"/></svg>Test server connection</button>
         </div>
       </div>
     </section>
@@ -162,7 +158,7 @@ main{padding:16px}
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sTitle">
   <div class="sbox">
     <h3 id="sTitle"><svg class="i" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Send by SMS</h3>
-    <div class="muted" id="sWhy">There is no internet. Send this record by SMS to the gateway phone. It will reach the server as soon as the gateway phone has internet.</div>
+    <div class="muted" id="sWhy"></div>
     <div class="msg" id="sMsg"></div>
     <div class="cnt" id="sCnt"></div>
     <div class="stack">
@@ -176,18 +172,16 @@ main{padding:16px}
 <script>
 /* ======================================================================
    ITN Distribution SMS Field App (demo form)
-   With internet: records go straight to the Apps Script server.
-   Without internet: the record is packed into one short SMS and the phone's
-   SMS app opens with it ready for the gateway phone. The gateway app
-   forwards it to the same server. Every record has its own ID, so the
-   server never saves the same record twice.
+   Every record is packed into one short SMS and the phone's SMS app opens
+   with it ready for the gateway phone, so the distributor only taps Send.
+   The gateway app forwards it to the Apps Script server. Every record has
+   its own ID, so the server never saves the same record twice.
 
    SMS format (fields separated by *):
    ITN1*id*yymmdd*district code*PHU*community*head*e-token*size*pregnant*under five*ITNs*distributor
    ====================================================================== */
 const DISTRICTS = ['Bo','Bombali','Bonthe','Falaba','Kailahun','Kambia','Karene','Kenema','Koinadugu','Kono','Moyamba','Port Loko','Pujehun','Tonkolili','Western Area Rural','Western Area Urban'];
-const DEFAULT_GATEWAY = '+23275837298';
-const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycby46LeTMy0R6HoBcIBI3ACsg44pi86WijghaPMmBm9oMh5tIjm529ViXJK_uSPbZ2FrTQ/exec';
+const DEFAULT_GATEWAY = '+23299725620';
 const KEY_REC = 'itnsms.records', KEY_SET = 'itnsms.settings';
 
 const $ = s => document.querySelector(s);
@@ -198,8 +192,8 @@ const mem = {};
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return k in mem ? mem[k] : d; } }
 function store(k, v){ mem[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
-let settings = Object.assign({ distributor:'', gateway:DEFAULT_GATEWAY, url:DEFAULT_URL }, load(KEY_SET, {}));
-if (!settings.url) settings.url = DEFAULT_URL;
+let settings = Object.assign({ distributor:'', gateway:DEFAULT_GATEWAY }, load(KEY_SET, {}));
+if (settings.gateway === '+23275837298') settings.gateway = DEFAULT_GATEWAY;   /* replace the old test number on phones that saved it */
 let records = load(KEY_REC, []);
 const saveRecords = () => { store(KEY_REC, records); render(); };
 
@@ -221,46 +215,13 @@ function smsHref(r){
   return 'sms:' + num + sep + 'body=' + encodeURIComponent(smsBody(r));
 }
 
-/* ---------- network ---------- */
-function setNet(){ const on = navigator.onLine; $('#net').classList.toggle('on', on); $('#net span').textContent = on ? 'Online' : 'Offline'; }
-async function postRecords(list){
-  if (!settings.url) throw new Error('No server address');
-  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 15000);
-  try {
-    const res = await fetch(settings.url, { method:'POST', body: JSON.stringify({ type:'records', records:list }), signal: ctl.signal });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'Server did not confirm');
-    return data.results || [];
-  } finally { clearTimeout(t); }
-}
-let syncing = false;
-async function sync(quiet){
-  if (syncing || !navigator.onLine || !settings.url) { if (!quiet && !settings.url) toast('Add the server address in Settings'); return; }
-  const todo = records.filter(r => r.status !== 'done');
-  if (!todo.length) { if (!quiet) toast('Everything is on the server'); return; }
-  syncing = true;
-  try {
-    const payload = todo.map(({ status, sentSms, savedAt, ...r }) => r);
-    const results = await postRecords(payload);
-    let n = 0;
-    results.forEach(x => {
-      const r = records.find(y => y.rid === x.key);
-      if (r && (x.status === 'saved' || x.status === 'duplicate')) { r.status = 'done'; r.savedAt = Date.now(); n++; }
-      if (r && x.status === 'invalid') r.error = x.reason;
-    });
-    saveRecords();
-    if (!quiet || n) toast(n + ' record' + (n === 1 ? '' : 's') + ' confirmed on the server');
-  } catch (e) { if (!quiet) toast('Could not reach the server'); }
-  finally { syncing = false; }
-}
-
 /* ---------- form ---------- */
 const sel = $('#district');
 DISTRICTS.forEach(d => sel.insertAdjacentHTML('beforeend', `<option>${esc(d)}</option>`));
 $('#date').value = today();
 $('#size').addEventListener('input', () => { const n = parseInt($('#size').value, 10); if (n > 0) $('#itns').value = Math.ceil(n / 2); });
 
-$('#frm').addEventListener('submit', async e => {
+$('#frm').addEventListener('submit', e => {
   e.preventDefault();
   if (!settings.distributor) { toast('Enter your Distributor ID in Settings first'); show('vSet'); return; }
   const f = id => $('#' + id);
@@ -282,15 +243,7 @@ $('#frm').addEventListener('submit', async e => {
   ['phu','community','head','etoken','size','itns'].forEach(id => f(id).value = '');
   f('preg').value = 0; f('u5').value = 0;
 
-  if (navigator.onLine && settings.url) {
-    toast('Sending to the server');
-    try {
-      const res = await postRecords([(({ status, ...x }) => x)(r)]);
-      const x = res.find(y => y.key === r.rid);
-      if (x && (x.status === 'saved' || x.status === 'duplicate')) { r.status = 'done'; r.savedAt = Date.now(); saveRecords(); toast('Saved on the server'); return; }
-    } catch (err) { /* falls through to SMS */ }
-  }
-  openSms(r, navigator.onLine && settings.url ? 'The server could not be reached. Send this record by SMS to the gateway phone instead.' : null);
+  openSms(r);
 });
 
 /* ---------- SMS sheet ---------- */
@@ -298,14 +251,14 @@ let smsRec = null;
 function openSms(r, why){
   smsRec = r;
   const body = smsBody(r), len = body.length, parts = len <= 160 ? 1 : Math.ceil(len / 153);
-  $('#sWhy').textContent = why || 'There is no internet. Send this record by SMS to the gateway phone. It will reach the server as soon as the gateway phone has internet.';
+  $('#sWhy').textContent = why || 'Tap the button below to open your SMS app with this record ready, then tap Send. The gateway phone forwards it to the server.';
   $('#sMsg').textContent = body;
   $('#sCnt').textContent = len + ' characters · ' + parts + ' SMS' + (parts > 1 ? ' (sent together)' : '') + ' · to ' + (settings.gateway || DEFAULT_GATEWAY);
   $('#sGo').href = smsHref(r);
   $('#sheet').classList.add('open');
 }
 $('#sGo').addEventListener('click', () => {
-  if (smsRec) { smsRec.status = smsRec.status === 'done' ? 'done' : 'sms'; smsRec.sentSms = Date.now(); saveRecords(); }
+  if (smsRec) { smsRec.status = 'sms'; smsRec.sentSms = Date.now(); saveRecords(); }
   setTimeout(() => $('#sheet').classList.remove('open'), 300);
 });
 $('#sLater').onclick = () => { $('#sheet').classList.remove('open'); toast('Saved on this phone. Send it from Records.'); };
@@ -319,7 +272,7 @@ const STATUS = {
 };
 function render(){
   const c = s => records.filter(r => r.status === s).length;
-  $('#kDone').textContent = c('done'); $('#kSms').textContent = c('sms'); $('#kWait').textContent = c('wait');
+  $('#kSms').textContent = c('sms'); $('#kWait').textContent = c('wait');
   const w = c('wait'); $('#badge').textContent = w; $('#badge').classList.toggle('hidden', !w);
   $('#setupNote').classList.toggle('hidden', !!settings.distributor);
   $('#list').innerHTML = records.length ? records.map(r => {
@@ -328,8 +281,7 @@ function render(){
       <div class="top"><b>${esc(r.head)}</b><span class="chip" style="--c:${s.c}"><i></i>${s.t}</span></div>
       <div class="meta">E-token ${esc(r.etoken)} · ${r.size} people · ${r.itns} ITN${r.itns === 1 ? '' : 's'}</div>
       <div class="meta">${esc(r.community)}, ${esc(r.phu)}, ${esc(r.district)} · ${fmtTime(r.deviceTime)}${r.sentSms ? ' · SMS ' + fmtTime(r.sentSms) : ''}</div>
-      ${r.error ? `<div class="meta" style="color:var(--bad)">Server: ${esc(r.error)}</div>` : ''}
-      ${r.status !== 'done' ? `<div class="acts"><button class="btn sms sm" data-sms="${r.rid}" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${r.status === 'sms' ? 'Send SMS again' : 'Send by SMS'}</button></div>` : ''}
+            ${`<div class="acts"><button class="btn sms sm" data-sms="${r.rid}" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${r.status === 'sms' ? 'Send SMS again' : 'Send by SMS'}</button></div>`}
     </div>`;
   }).join('') : '<div class="empty">No records yet.</div>';
 }
@@ -337,23 +289,14 @@ $('#list').addEventListener('click', e => {
   const b = e.target.closest('[data-sms]'); if (!b) return;
   const r = records.find(x => x.rid === b.dataset.sms); if (r) openSms(r, 'Send this record by SMS to the gateway phone.');
 });
-$('#syncBtn').onclick = () => sync(false);
 
 /* ---------- settings ---------- */
-function fillSettings(){ $('#sDist').value = settings.distributor; $('#sGw').value = settings.gateway; $('#sUrl').value = settings.url; }
+function fillSettings(){ $('#sDist').value = settings.distributor; $('#sGw').value = settings.gateway; }
 $('#saveSet').onclick = () => {
   settings.distributor = smsText($('#sDist').value, 12).replace(/\s/g, '').toUpperCase();
   settings.gateway = $('#sGw').value.replace(/[^\d+]/g, '') || DEFAULT_GATEWAY;
-  settings.url = $('#sUrl').value.trim();
   store(KEY_SET, settings); fillSettings(); render();
   toast(settings.distributor ? 'Settings saved' : 'Settings saved. Distributor ID is still needed.');
-};
-$('#testSet').onclick = async () => {
-  const url = $('#sUrl').value.trim();
-  if (!url) { toast('Enter the server address first'); return; }
-  if (!navigator.onLine) { toast('This phone is offline'); return; }
-  try { const d = await (await fetch(url)).json(); toast(d.ok ? 'Server connected' : 'Server answered with a problem'); }
-  catch (e) { toast('Could not reach the server'); }
 };
 
 /* ---------- tabs ---------- */
@@ -366,10 +309,7 @@ function show(v){
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => show(b.dataset.v));
 
 /* ---------- start ---------- */
-window.addEventListener('online', () => { setNet(); sync(true); });
-window.addEventListener('offline', setNet);
-setInterval(() => sync(true), 60000);
-setNet(); fillSettings(); render(); sync(true);
+fillSettings(); render();
 </script>
 </body>
 </html>
