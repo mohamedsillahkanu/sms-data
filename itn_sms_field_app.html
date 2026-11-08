@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#004080">
+<title>ITN Distribution · SMS Field App · ICF-SL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#004080; --navy2:#00305f; --gold:#ffc107; --bg:#eef2f7; --card:#ffffff; --line:#cfd9e6; --ink:#0b2540; --mut:#4a5b70;
+  --ok:#009E73; --sms:#0072B2; --wait:#E69F00; --bad:#D55E00;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.45 Roboto,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
+input,select{font:inherit;font-size:16px;color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 13px;width:100%;min-width:0;appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--navy) 50%),linear-gradient(135deg,var(--navy) 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+input:focus,select:focus{outline:0;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,64,128,.15)}
+input.bad,select.bad{border-color:var(--bad);box-shadow:0 0 0 3px rgba(213,94,0,.15)}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+
+.app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;padding-bottom:84px}
+.bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--navy);color:#fff;border-bottom:4px solid var(--gold)}
+.logo{width:44px;height:44px;border-radius:12px;background:#fff;color:var(--navy);display:grid;place-items:center;font-weight:900;font-size:12px;letter-spacing:.02em;flex:0 0 auto}
+.bar .t{flex:1;min-width:0}
+.bar b{display:block;font-size:17px;font-weight:700;line-height:1.2}
+.bar small{display:block;font-size:12.5px;opacity:.9}
+.net{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.5);white-space:nowrap}
+.net i{width:9px;height:9px;border-radius:50%;background:var(--wait)}
+.net.on i{background:#3ee0a8}
+
+main{padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(11,37,64,.06)}
+.h{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.h::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--gold),transparent);border-radius:2px}
+.fld{margin-bottom:13px}
+.fld label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin:0 0 6px}
+.fld label .r{color:var(--bad)}
+.fld .hint{font-size:12px;color:var(--mut);margin-top:5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:12px 18px;border-radius:14px;background:var(--navy);color:#fff;font-weight:700;font-size:15.5px;width:100%;text-decoration:none}
+.btn.gold{background:var(--gold);color:var(--ink)}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.btn.sms{background:var(--sms)}
+.btn.sm{min-height:40px;padding:8px 12px;font-size:13.5px;width:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--mut)}
+
+/* tabs */
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(560px,100%);z-index:20;display:flex;background:#fff;border-top:4px solid var(--gold);box-shadow:0 -2px 8px rgba(11,37,64,.08);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 10px;font-size:12px;font-weight:700;color:var(--mut);position:relative}
+.tabs button.on{color:var(--navy)}
+.tabs button.on::before{content:"";position:absolute;top:0;left:22%;right:22%;height:3px;border-radius:0 0 3px 3px;background:var(--navy)}
+.tabs .badge{position:absolute;top:5px;left:calc(50% + 8px);min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;display:grid;place-items:center;padding:0 5px}
+
+/* records */
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--k)}
+.kpi b{display:block;font-size:22px;font-weight:900;line-height:1.1}
+.kpi span{font-size:12px;color:var(--mut);font-weight:700}
+.rec{border-bottom:1px solid #e3eaf1;padding:12px 0}
+.rec:last-child{border-bottom:0}
+.rec .top{display:flex;align-items:flex-start;gap:10px}
+.rec .top b{flex:1;font-size:15px}
+.rec .meta{font-size:12.5px;color:var(--mut);margin-top:3px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;white-space:nowrap;background:color-mix(in srgb,var(--c) 14%,#fff);color:color-mix(in srgb,var(--c) 75%,#000);border:1px solid color-mix(in srgb,var(--c) 45%,#fff)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.rec .acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.empty{text-align:center;color:var(--mut);padding:26px 10px}
+
+/* sms sheet */
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(7,18,27,.55);display:none;align-items:flex-end;justify-content:center}
+.sheet.open{display:flex}
+.sbox{width:min(560px,100%);background:#fff;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));border-top:5px solid var(--gold);animation:up .2s ease}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.sbox h3{margin:0 0 6px;font-size:19px;font-weight:900;color:var(--navy);display:flex;align-items:center;gap:8px}
+.msg{font-family:"Roboto Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;background:#f4f7fb;border:1px dashed var(--line);border-radius:12px;padding:12px;word-break:break-all;margin:12px 0 6px}
+.cnt{font-size:12.5px;color:var(--mut);margin-bottom:14px}
+.stack{display:flex;flex-direction:column;gap:10px}
+
+.toast{position:fixed;left:50%;top:88px;transform:translateX(-50%);z-index:60;background:var(--ink);color:#fff;font-weight:700;padding:11px 16px;border-radius:12px;max-width:90vw;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.note{background:#fff8e1;border-left:4px solid var(--gold);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <span class="logo">ICF-SL</span>
+    <div class="t"><b>ITN Distribution</b><small>SMS Field App · 2027 Mass ITN Campaign</small></div>
+    <span class="net on" id="net"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>SMS mode</span></span>
+  </header>
+
+  <main>
+    <!-- NEW RECORD -->
+    <section id="vNew">
+      <form id="frm" class="card" novalidate autocomplete="off">
+        <p class="h">Distribution</p>
+        <div class="fld"><label for="dist">Distributor ID <span class="r">*</span></label><input id="dist" maxlength="12" required placeholder="e.g. DIST014" autocapitalize="characters"><div class="hint">Kept on this phone for your next record.</div></div>
+        <div class="two">
+          <div class="fld"><label for="date">Distribution date <span class="r">*</span></label><input id="date" type="date" required></div>
+          <div class="fld"><label for="district">District <span class="r">*</span></label><select id="district" required><option value="">Select</option></select></div>
+        </div>
+        <div class="fld"><label for="phu">PHU <span class="r">*</span></label><input id="phu" maxlength="25" required placeholder="e.g. Kamawalla MCHP"></div>
+        <div class="fld"><label for="community">Community or village <span class="r">*</span></label><input id="community" maxlength="25" required></div>
+
+        <p class="h">Household</p>
+        <div class="fld"><label for="head">Head of household <span class="r">*</span></label><input id="head" maxlength="25" required></div>
+        <div class="fld"><label for="etoken">E-token <span class="r">*</span></label><input id="etoken" maxlength="16" required placeholder="e.g. 0255_0058241" inputmode="text"><div class="hint">As written on the household's e-token.</div></div>
+        <div class="three">
+          <div class="fld"><label for="size">Household size <span class="r">*</span></label><input id="size" type="number" min="1" max="50" inputmode="numeric" required></div>
+          <div class="fld"><label for="preg">Pregnant women</label><input id="preg" type="number" min="0" max="20" inputmode="numeric" value="0"></div>
+          <div class="fld"><label for="u5">Under five</label><input id="u5" type="number" min="0" max="30" inputmode="numeric" value="0"></div>
+        </div>
+        <div class="fld"><label for="itns">ITNs issued <span class="r">*</span></label><input id="itns" type="number" min="0" max="25" inputmode="numeric" required><div class="hint">Filled in as 1 ITN for every 2 people. Change it if needed.</div></div>
+
+        <button class="btn" type="submit"><svg class="i" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>Submit data</button>
+      </form>
+    </section>
+
+    <!-- RECORDS -->
+    <section id="vRec" class="hidden">
+      <div class="kpis">
+        <div class="kpi" style="--k:var(--sms)"><b id="kSms">0</b><span>Sent by SMS</span></div>
+        <div class="kpi" style="--k:var(--wait)"><b id="kWait">0</b><span>Not sent</span></div>
+      </div>
+      <div class="card">
+        <div class="row" style="margin-bottom:6px"><p class="h" style="flex:1;margin:0">Records on this phone</p></div>
+        <div id="list"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="vSet" class="hidden">
+      <div class="card">
+        <p class="h">Settings</p>
+        <div class="fld"><label for="sGw">Gateway phone number <span class="r">*</span></label><input id="sGw" type="tel" inputmode="tel"><div class="hint">The phone running the ITN SMS Gateway app. Every record is sent to this number by SMS.</div></div>
+        <div class="stack">
+          <button class="btn" id="saveSet" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Save settings</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs">
+  <button data-v="vNew" class="on"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New record</button>
+  <button data-v="vRec"><svg class="i" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>Records<span class="badge hidden" id="badge">0</span></button>
+  <button data-v="vSet"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+</nav>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+  <div class="sbox">
+    <h3 id="sTitle"><svg class="i" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Send by SMS</h3>
+    <div class="muted" id="sWhy"></div>
+    <div class="msg" id="sMsg"></div>
+    <div class="cnt" id="sCnt"></div>
+    <div class="stack">
+      <a class="btn sms" id="sGo" href="#"><svg class="i" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>Open SMS app and tap Send</a>
+      <button class="btn sec" id="sLater" type="button">Later</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ======================================================================
+   ITN Distribution SMS Field App (demo form)
+   Every record is packed into one short SMS and the phone's SMS app opens
+   with it ready for the gateway phone, so the distributor only taps Send.
+   The gateway app forwards it to the Apps Script server. Every record has
+   its own ID, so the server never saves the same record twice.
+
+   SMS format (fields separated by *):
+   ITN1*id*yymmdd*district code*PHU*community*head*e-token*size*pregnant*under five*ITNs*distributor
+   ====================================================================== */
+const DISTRICTS = ['Bo','Bombali','Bonthe','Falaba','Kailahun','Kambia','Karene','Kenema','Koinadugu','Kono','Moyamba','Port Loko','Pujehun','Tonkolili','Western Area Rural','Western Area Urban'];
+const DEFAULT_GATEWAY = '+23275837298';
+const KEY_REC = 'itnsms.records', KEY_SET = 'itnsms.settings';
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- storage (kept safe if the browser blocks it) ---------- */
+const mem = {};
+function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return k in mem ? mem[k] : d; } }
+function store(k, v){ mem[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+let settings = Object.assign({ distributor:'', gateway:DEFAULT_GATEWAY }, load(KEY_SET, {}));
+if (settings.gateway === '+23299725620') settings.gateway = DEFAULT_GATEWAY;   /* replace the old test number on phones that saved it */
+let records = load(KEY_REC, []);
+const saveRecords = () => { store(KEY_REC, records); render(); };
+
+/* ---------- helpers ---------- */
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2600); }
+const newId = () => Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36).padStart(2, '0');
+/* SMS safe text: plain letters only, no * separator, short */
+const smsText = (s, n) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 .,'\/_()-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const fmtTime = t => new Date(t).toLocaleString([], { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+
+function smsBody(r){
+  const d = r.date.replace(/-/g, '').slice(2);
+  return ['ITN1', r.rid, d, DISTRICTS.indexOf(r.district) + 1, r.phu, r.community, r.head, r.etoken, r.size, r.preg, r.u5, r.itns, r.distributor].join('*');
+}
+function smsHref(r){
+  const num = (settings.gateway || DEFAULT_GATEWAY).replace(/\s+/g, '');
+  const sep = /iPhone|iPad|iPod/i.test(navigator.userAgent) ? '&' : '?';
+  return 'sms:' + num + sep + 'body=' + encodeURIComponent(smsBody(r));
+}
+
+/* ---------- form ---------- */
+const sel = $('#district');
+DISTRICTS.forEach(d => sel.insertAdjacentHTML('beforeend', `<option>${esc(d)}</option>`));
+$('#date').value = today();
+$('#size').addEventListener('input', () => { const n = parseInt($('#size').value, 10); if (n > 0) $('#itns').value = Math.ceil(n / 2); });
+
+$('#frm').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = id => $('#' + id);
+  const req = ['dist','date','district','phu','community','head','etoken','size','itns'];
+  let bad = null;
+  document.querySelectorAll('#frm .bad').forEach(x => x.classList.remove('bad'));
+  req.forEach(id => { if (!String(f(id).value).trim()) { f(id).classList.add('bad'); bad = bad || f(id); } });
+  ['size','preg','u5','itns'].forEach(id => { const el = f(id), v = el.value === '' ? 0 : +el.value; if (!Number.isInteger(v) || v < +el.min || v > +el.max) { el.classList.add('bad'); bad = bad || el; } });
+  if (bad) { bad.focus(); toast('Please complete the highlighted fields'); return; }
+
+  const r = {
+    rid: newId(), date: f('date').value, district: f('district').value,
+    phu: smsText(f('phu').value, 25), community: smsText(f('community').value, 25), head: smsText(f('head').value, 25),
+    etoken: smsText(f('etoken').value, 16).replace(/\s/g, ''),
+    size: +f('size').value, preg: +(f('preg').value || 0), u5: +(f('u5').value || 0), itns: +f('itns').value,
+    distributor: smsText(f('dist').value, 12).replace(/\s/g, '').toUpperCase(), deviceTime: Date.now(), status: 'wait'
+  };
+  settings.distributor = r.distributor; store(KEY_SET, settings);
+  records.unshift(r); saveRecords();
+  ['phu','community','head','etoken','size','itns'].forEach(id => f(id).value = '');
+  f('preg').value = 0; f('u5').value = 0;
+
+  openSms(r);
+});
+
+/* ---------- SMS sheet ---------- */
+let smsRec = null;
+function openSms(r, why){
+  smsRec = r;
+  const body = smsBody(r), len = body.length, parts = len <= 160 ? 1 : Math.ceil(len / 153);
+  $('#sWhy').textContent = why || 'Tap the button below to open your SMS app with this record ready, then tap Send. The gateway phone forwards it to the server.';
+  $('#sMsg').textContent = body;
+  $('#sCnt').textContent = len + ' characters · ' + parts + ' SMS' + (parts > 1 ? ' (sent together)' : '') + ' · to ' + (settings.gateway || DEFAULT_GATEWAY);
+  $('#sGo').href = smsHref(r);
+  $('#sheet').classList.add('open');
+}
+$('#sGo').addEventListener('click', () => {
+  if (smsRec) { smsRec.status = 'sms'; smsRec.sentSms = Date.now(); saveRecords(); }
+  setTimeout(() => $('#sheet').classList.remove('open'), 300);
+});
+$('#sLater').onclick = () => { $('#sheet').classList.remove('open'); toast('Saved on this phone. Send it from Records.'); };
+$('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('#sheet').classList.remove('open'); });
+
+/* ---------- records list ---------- */
+const STATUS = {
+  done: { c:'var(--ok)', t:'On server' },
+  sms:  { c:'var(--sms)', t:'Sent by SMS' },
+  wait: { c:'var(--wait)', t:'Not sent' }
+};
+function render(){
+  const c = s => records.filter(r => r.status === s).length;
+  $('#kSms').textContent = c('sms'); $('#kWait').textContent = c('wait');
+  const w = c('wait'); $('#badge').textContent = w; $('#badge').classList.toggle('hidden', !w);
+  $('#list').innerHTML = records.length ? records.map(r => {
+    const s = STATUS[r.status] || STATUS.wait;
+    return `<div class="rec">
+      <div class="top"><b>${esc(r.head)}</b><span class="chip" style="--c:${s.c}"><i></i>${s.t}</span></div>
+      <div class="meta">E-token ${esc(r.etoken)} · ${r.size} people · ${r.itns} ITN${r.itns === 1 ? '' : 's'}</div>
+      <div class="meta">${esc(r.community)}, ${esc(r.phu)}, ${esc(r.district)} · ${fmtTime(r.deviceTime)}${r.sentSms ? ' · SMS ' + fmtTime(r.sentSms) : ''}</div>
+            ${`<div class="acts"><button class="btn sms sm" data-sms="${r.rid}" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${r.status === 'sms' ? 'Send SMS again' : 'Send by SMS'}</button></div>`}
+    </div>`;
+  }).join('') : '<div class="empty">No records yet.</div>';
+}
+$('#list').addEventListener('click', e => {
+  const b = e.target.closest('[data-sms]'); if (!b) return;
+  const r = records.find(x => x.rid === b.dataset.sms); if (r) openSms(r, 'Send this record by SMS to the gateway phone.');
+});
+
+/* ---------- settings ---------- */
+function fillSettings(){ $('#sGw').value = settings.gateway; }
+$('#saveSet').onclick = () => {
+  settings.gateway = $('#sGw').value.replace(/[^\d+]/g, '') || DEFAULT_GATEWAY;
+  store(KEY_SET, settings); fillSettings(); render();
+$('#dist').value = settings.distributor || '';
+  toast('Settings saved');
+};
+
+/* ---------- tabs ---------- */
+function show(v){
+  ['vNew','vRec','vSet'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v));
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  if (v === 'vSet') fillSettings();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => show(b.dataset.v));
+
+/* ---------- start ---------- */
+fillSettings(); render();
+$('#dist').value = settings.distributor || '';
+</script>
+</body>
+</html>
