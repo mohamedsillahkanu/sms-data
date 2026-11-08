@@ -181,7 +181,7 @@ main{padding:16px}
    ITN1*id*yymmdd*district code*PHU*community*head*e-token*size*pregnant*under five*ITNs*distributor
    ====================================================================== */
 const DISTRICTS = ['Bo','Bombali','Bonthe','Falaba','Kailahun','Kambia','Karene','Kenema','Koinadugu','Kono','Moyamba','Port Loko','Pujehun','Tonkolili','Western Area Rural','Western Area Urban'];
-const DEFAULT_GATEWAY = '+23299725620';
+const DEFAULT_GATEWAY = '+23275837298';
 const KEY_REC = 'itnsms.records', KEY_SET = 'itnsms.settings';
 
 const $ = s => document.querySelector(s);
@@ -193,7 +193,7 @@ function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.pa
 function store(k, v){ mem[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
 let settings = Object.assign({ distributor:'', gateway:DEFAULT_GATEWAY }, load(KEY_SET, {}));
-if (settings.gateway === '+23275837298') settings.gateway = DEFAULT_GATEWAY;   /* replace the old test number on phones that saved it */
+if (settings.gateway === '+23299725620') settings.gateway = DEFAULT_GATEWAY;   /* replace the old test number on phones that saved it */
 let records = load(KEY_REC, []);
 const saveRecords = () => { store(KEY_REC, records); render(); };
 
